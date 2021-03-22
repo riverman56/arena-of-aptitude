@@ -20,7 +20,6 @@
     Content updates are served when players join and leave servers.
 ]]
 
-local HttpService = game:GetService("HttpService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local MessagingService = game:GetService("MessagingService")
 local Players = game:GetService("Players")
@@ -142,13 +141,6 @@ function ServerBrowserService:KnitInit()
 
     -- (server startup) Request all running server data.
     self:requestServers()
-
-    coroutine.wrap(function()
-        while true do
-            wait(1)
-            print(HttpService:JSONEncode(self.servers))
-        end
-    end)()
 end
 
 return ServerBrowserService

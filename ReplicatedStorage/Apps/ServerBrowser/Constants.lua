@@ -1,0 +1,3 @@
+local Constants = {}
+
+return Constants
