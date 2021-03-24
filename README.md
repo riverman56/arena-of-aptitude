@@ -1,2 +1,3 @@
-# arena of aptitude
+# Arena of Aptitude
  
+sword fighting
