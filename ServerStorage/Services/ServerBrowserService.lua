@@ -25,6 +25,7 @@ local MessagingService = game:GetService("MessagingService")
 local Players = game:GetService("Players")
 
 local Knit = require(ReplicatedStorage.Knit)
+local RemoteProperty = require(Knit.Util.Remote.RemoteProperty)
 
 local getServerRegion = require(ReplicatedStorage.Utility.getServerRegion)
 
@@ -34,6 +35,7 @@ local ServerBrowserService = Knit.CreateService({
 })
 
 ServerBrowserService.servers = {}
+ServerBrowserService.Client.servers = RemoteProperty.new(ServerBrowserService.servers)
 
 function getUserIds()
     local players = Players:GetPlayers()
@@ -103,7 +105,13 @@ function ServerBrowserService:ingestServerData()
     table.insert(self, userIds)
 
     local jobId = self[2]
-    ServerBrowserService.servers[jobId] = self
+    ServerBrowserService.servers[jobId] = {
+        region = self[1],
+        jobId = self[2],
+        playerCount = self[3],
+        userIds = self[4]
+    }
+    ServerBrowserService.Client.servers:Set(ServerBrowserService.servers)
 end
 
 function ServerBrowserService:ingestKilledServerData()
@@ -111,6 +119,7 @@ function ServerBrowserService:ingestKilledServerData()
 
     if ServerBrowserService.servers[jobId] then
         ServerBrowserService.servers[jobId] = nil
+        ServerBrowserService.Client.servers:Set(ServerBrowserService.servers)
     end
 end
 

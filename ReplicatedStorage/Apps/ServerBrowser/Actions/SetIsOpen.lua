@@ -2,10 +2,10 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Rodux = require(ReplicatedStorage.Modules.Rodux)
 
-local UpdateServers = Rodux.makeActionCreator(script.Name, function(servers: table)
+local SetIsOpen = Rodux.makeActionCreator(script.Name, function(open: boolean)
     return {
-        Servers = servers,
+        isOpen = open,
     }
 end)
 
-return UpdateServers
+return SetIsOpen

@@ -7,9 +7,8 @@ local UpdateServers = require(script.Parent.Parent.Actions.UpdateServers)
 
 local Servers = Rodux.createReducer(nil, {
     [UpdateServers.name] = function(state, action)
-        local servers = state
-        table.insert(servers, action)
-
-        return servers
+        return action.Servers
     end
 })
+
+return Servers

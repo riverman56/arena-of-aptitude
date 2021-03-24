@@ -10,6 +10,7 @@ local ServerBrowser = Roact.Component:extend("ServerBrowser")
 function ServerBrowser:render()
     return Roact.createElement("ScreenGui", {
         ResetOnSpawn = false,
+        IgnoreGuiInset = true,
     }, {
         Background = Roact.createElement(Background),
     })

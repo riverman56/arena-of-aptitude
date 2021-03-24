@@ -9,20 +9,25 @@ local Server = require(script.Parent.Server)
 local ServerList = Roact.Component:extend("ServerList")
 
 function ServerList:init()
-    self.parentScroller = Roact.createRef()
+    self.canvasSize, self.updateCanvasSize = Roact.createBinding()
+
+    self.canvasSize = self.canvasSize:map(function(size)
+        return UDim2.new(0, 0, 0, size)
+    end)
 end
 
 function ServerList:render()
     local children = {
         UIPadding = Roact.createElement("UIPadding", {
-            PaddingTop = UDim.new(0.03, 0),
+            PaddingLeft = UDim.new(-0.04, 0),
+            PaddingTop = UDim.new(0, 6),
         }),
         UIListLayout = Roact.createElement("UIListLayout", {
-            Padding = UDim.new(0.007, 0),
-            [Roact.Change.AbsoluteContentSize] = function(value)
-                if self.parentScroller:getValue() then
-                    self.parentScroller:getValue().CanvasSize = UDim2.new(0, 0, 0, value.Y)
-                end
+            Padding = UDim.new(0, 5),
+            HorizontalAlignment = Enum.HorizontalAlignment.Center,
+            SortOrder = Enum.SortOrder.LayoutOrder,
+            [Roact.Change.AbsoluteContentSize] = function(instance)
+                self.updateCanvasSize(instance.AbsoluteContentSize.Y)
             end,
         }),
     }
@@ -33,20 +38,22 @@ function ServerList:render()
             playerCount = server.playerCount,
             jobId = server.jobId,
             userIds = server.userIds,
+            layoutOrder = Players.MaxPlayers - server.playerCount,
         })
 
-        children[tostring(Players.MaxPlayers - server.playerCount)] = serverElement
+        children[server.jobId] = serverElement
     end
-    
+
     return Roact.createElement("ScrollingFrame", {
         AnchorPoint = Vector2.new(0.5, 0.5),
+        BackgroundTransparency = 1,
+        BorderSizePixel = 0,
         Position = UDim2.new(0.515, 0, 0.53, 0),
         Size = UDim2.new(0.895, 0, 0.878, 0),
         ScrollBarImageColor3 = Color3.fromRGB(39, 39, 39),
         ScrollBarThickness = 4,
         ScrollingDirection = Enum.ScrollingDirection.Y,
-        [Roact.Ref] = self.parentScroller,
-
+        CanvasSize = self.canvasSize,
     }, {
         Container = Roact.createElement("Frame", {
             AnchorPoint = Vector2.new(0.5, 0.5),
