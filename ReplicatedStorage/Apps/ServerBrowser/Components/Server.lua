@@ -200,17 +200,13 @@ function Server:render()
             Size = UDim2.new(0.369, 0,0.324, 0),
             Text = "",
             [Roact.Event.MouseEnter] = function()
-                if not game.JobId == self.props.jobId then
-                    if self.props.isOpen == true then
-                        self.playButtonTransparencyMotor:setGoal(Otter.spring(0.3, Constants.PLAYERSCROLLER_PLAYBUTTON_SPRING_CONFIG))
-                    end
+                if self.props.isOpen == true then
+                    self.playButtonTransparencyMotor:setGoal(Otter.spring(0.3, Constants.PLAYERSCROLLER_PLAYBUTTON_SPRING_CONFIG))
                 end
             end,
             [Roact.Event.MouseLeave] = function()
-                if not game.JobId == self.props.jobId then
-                    if self.props.isOpen == true then
-                        self.playButtonTransparencyMotor:setGoal(Otter.spring(0, Constants.PLAYERSCROLLER_PLAYBUTTON_SPRING_CONFIG))
-                    end
+                if self.props.isOpen == true then
+                    self.playButtonTransparencyMotor:setGoal(Otter.spring(0, Constants.PLAYERSCROLLER_PLAYBUTTON_SPRING_CONFIG))
                 end
             end,
             [Roact.Event.Activated] = function()
