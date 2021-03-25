@@ -12,18 +12,19 @@
     a predetermined order of data that goes as follows:
 
     data = {
-        [1] = "{SERVER_REGION}:{JOB_ID}:{PLAYER_COUNT},
-        XXXXXX [2] = {array_of_userids} XXXXXX
+        [1] = "{SERVER_REGION}:{JOB_ID}:{PLAYER_COUNT}:{base64_encoded_string_userids},
     }
 
     When a server is killed (no players), it is removed from the server browser.
     Content updates are served when players join and leave servers.
 ]]
 
+local ServerStorage = game:GetService("ServerStorage")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local MessagingService = game:GetService("MessagingService")
 local Players = game:GetService("Players")
 
+local BitBuffer = require(ServerStorage.Modules.BitBuffer)
 local Knit = require(ReplicatedStorage.Knit)
 local RemoteProperty = require(Knit.Util.Remote.RemoteProperty)
 
@@ -38,31 +39,40 @@ ServerBrowserService.servers = {}
 ServerBrowserService.Client.servers = RemoteProperty.new(ServerBrowserService.servers)
 
 function getUserIds()
-    local players = Players:GetPlayers()
-    local userIds = table.create(#players)
+    local buffer = BitBuffer.new()
 
-    for _, player in pairs(players) do
-        table.insert(userIds, player.UserId)
+    for _, player in pairs(Players:GetPlayers()) do
+        local userId = buffer:WriteFloat64(player.UserId)
     end
 
-    return userIds
+    return buffer:ToBase64()
 end
 
 function ServerBrowserService:deliverServerContent()
+    if game.PrivateServerId ~= "" then
+        return
+    end
+    
     MessagingService:PublishAsync("ServerBrowserContentDelivery", {
-        [1] = string.format("%s:%s:%s", ServerBrowserService.region, game.JobId, tostring(#Players:GetPlayers())),
-        [2] = getUserIds(),
+        [1] = string.format("%s:%s:%s:%s", ServerBrowserService.region, game.JobId, tostring(#Players:GetPlayers()), getUserIds()),
     })
 end
 
 function ServerBrowserService:deliverRunningServerData()
+    if game.PrivateServerId ~= "" then
+        return
+    end
+    
     MessagingService:PublishAsync("ServerBrowserReceiveRunningServerData", {
-        [1] = string.format("%s:%s:%s", ServerBrowserService.region, game.JobId, tostring(#Players:GetPlayers())),
-        [2] = getUserIds(),
+        [1] = string.format("%s:%s:%s:%s", ServerBrowserService.region, game.JobId, tostring(#Players:GetPlayers()), getUserIds()),
     })
 end
 
 function ServerBrowserService:deliverKilledServer()
+    if game.PrivateServerId ~= "" then
+        return
+    end
+
     MessagingService:PublishAsync("ServerBrowserKilledServer", {
         [1] = game.JobId,
     })
@@ -99,19 +109,32 @@ function ServerBrowserService:ingestRunningServersRequest()
 end
 
 function ServerBrowserService:ingestServerData()
-    -- turn our compressed data into something easier to work with
-    local userIds = self.Data[2]
-    self = string.split(self.Data[1], ":")
-    table.insert(self, userIds)
+    local raw = self.Data[2]
+    local buffer = BitBuffer.new()
 
-    local jobId = self[2]
+    local data = string.split(raw[1], ":")
+
+    local region = data[1]
+    local jobId = data[2]
+    local playerCount = data[3]
+    local userIdsBase64 = data[4]
+
+    buffer:FromBase64(userIdsBase64)
+
+    local userIds = table.create(playerCount)
+
+    for i = 1, playerCount do
+        table.insert(userIds, buffer:ReadFloat64())
+    end
+
     ServerBrowserService.servers[jobId] = {
-        region = self[1],
-        jobId = self[2],
-        playerCount = self[3],
-        userIds = self[4]
+        region = region,
+        jobId = jobId,
+        playerCount = playerCount,
+        userIds = userIds,
     }
-    ServerBrowserService.Client.servers:Set(ServerBrowserService.servers)
+
+    ServerBrowserService.Client.servers:Set(ServerBrowserService.servers)]]
 end
 
 function ServerBrowserService:ingestKilledServerData()
@@ -131,8 +154,8 @@ function ServerBrowserService:KnitInit()
     MessagingService:SubscribeAsync("ServerBrowserRequestRunningServers", self.ingestRunningServersRequest)
     MessagingService:SubscribeAsync("ServerBrowserReceiveRunningServerData", self.ingestServerData)
 
-    -- When a player joins the game, tell all servers to add it to their
-    -- servers list,
+    -- When a player joins the game, tell all servers to update their
+    -- servers list.
     Players.PlayerAdded:Connect(function()
         self.deliverServerContent()
     end)

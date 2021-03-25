@@ -39,10 +39,6 @@ function Server:init()
     self.playButtonTransparencyMotor = Otter.createSingleMotor(1)
     self.playButtonTransparencyMotor:onStep(self.updatePlayButtonTransparency)
 
-    self.canvasPosition:map(function(position)
-        return Vector2.new(position, 0)
-    end)
-
     self.canvasSize, self.updateCanvasSize = Roact.createBinding(0)
 
     self.canvasSize = self.canvasSize:map(function(size)

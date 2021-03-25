@@ -21,6 +21,7 @@ local OverheadDisplayService = Knit.CreateService({
 
 function OverheadDisplayService:KnitInit()
     Players.PlayerAdded:Connect(function(player)
+        local handle = nil
         player.CharacterAdded:Connect(function(character)
             local humanoid = character:WaitForChild("Humanoid")
 
@@ -36,7 +37,7 @@ function OverheadDisplayService:KnitInit()
                 character = character,
             })
 
-            Roact.mount(root, character, "OverheadDisplay")
+            handle = Roact.mount(root, character, "OverheadDisplay")
 
             store:dispatch(UpdateHealth(humanoid.Health, humanoid.MaxHealth))
             store:dispatch(UpdateVisibility(true))
@@ -55,6 +56,7 @@ function OverheadDisplayService:KnitInit()
         end)
         
         player.CharacterRemoving:Connect(function()
+            Roact.unmount(handle)
         end)
     end)
 end
