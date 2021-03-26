@@ -52,7 +52,7 @@ function ServerBrowserService:deliverServerContent()
     if game.PrivateServerId ~= "" then
         return
     end
-    
+
     MessagingService:PublishAsync("ServerBrowserContentDelivery", {
         [1] = string.format("%s:%s:%s:%s", ServerBrowserService.region, game.JobId, tostring(#Players:GetPlayers()), getUserIds()),
     })
@@ -62,7 +62,7 @@ function ServerBrowserService:deliverRunningServerData()
     if game.PrivateServerId ~= "" then
         return
     end
-    
+
     MessagingService:PublishAsync("ServerBrowserReceiveRunningServerData", {
         [1] = string.format("%s:%s:%s:%s", ServerBrowserService.region, game.JobId, tostring(#Players:GetPlayers()), getUserIds()),
     })
@@ -103,13 +103,13 @@ function ServerBrowserService:ingestRunningServersRequest()
         -- because it will be our own server.
         return
     end
-    
+
     -- send a response to all servers with this server's information
     ServerBrowserService:deliverRunningServerData()
 end
 
 function ServerBrowserService:ingestServerData()
-    local raw = self.Data[2]
+    local raw = self.Data
     local buffer = BitBuffer.new()
 
     local data = string.split(raw[1], ":")
@@ -134,7 +134,7 @@ function ServerBrowserService:ingestServerData()
         userIds = userIds,
     }
 
-    ServerBrowserService.Client.servers:Set(ServerBrowserService.servers)]]
+    ServerBrowserService.Client.servers:Set(ServerBrowserService.servers)
 end
 
 function ServerBrowserService:ingestKilledServerData()
